@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DevOps Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            width: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+
+        .chat-box {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+
+        .chat-box li {
+            list-style: none;
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            background: #e6f0ff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            background: #2a5298;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: gray;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background: #1e3c72;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <h2>DevOps Chat</h2>
+
+    <div class="chat-box">
+        <ul id="chat"></ul>
+    </div>
+
+    <div class="input-group">
+        <input id="username" placeholder="Username">
+        <input id="message" placeholder="Message">
+        <button id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+    </div>
+</div>
+
+<script>
+const usernameInput = document.getElementById("username");
+const messageInput = document.getElementById("message");
+const sendBtn = document.getElementById("sendBtn");
+
+function toggleButton() {
+    sendBtn.disabled = !usernameInput.value.trim() || !messageInput.value.trim();
+}
+
+usernameInput.addEventListener("input", toggleButton);
+messageInput.addEventListener("input", toggleButton);
+
+messageInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        sendMessage();
+    }
+});
+
+function sendMessage() {
+    if (sendBtn.disabled) return;
+
+    fetch("/api/send", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            username: usernameInput.value,
+            message: messageInput.value
+        })
+    }).then(() => {
+        messageInput.value = "";
+        toggleButton();
+        loadMessages();
+    });
+}
+
+function loadMessages() {
+    fetch("/api/messages")
+    .then(res => res.json())
+    .then(data => {
+        let chat = document.getElementById("chat");
+        chat.innerHTML = "";
+        data.forEach(msg => {
+            let li = document.createElement("li");
+            li.textContent = msg[0] + ": " + msg[1];
+            chat.appendChild(li);
+        });
+
+        // Auto scroll
+        chat.parentElement.scrollTop = chat.parentElement.scrollHeight;
+    });
+}
+
+loadMessages();
+setInterval(loadMessages, 3000); // Auto refresh every 3 seconds
+</script>
+
+</body>
+</html>

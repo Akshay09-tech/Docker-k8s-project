@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: chat-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: akshaychhallare/chat-backend:v2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_HOST
+          value: "postgres-service"
+        volumeMounts:
+        - mountPath: /data
+          name: chat-storage
+      volumes:
+      - name: chat-storage
+        persistentVolumeClaim:
+          claimName: chat-pvc

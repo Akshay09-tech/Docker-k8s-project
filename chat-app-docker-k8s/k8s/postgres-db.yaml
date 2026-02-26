@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-db
+  namespace: chat-app
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "admin123"
+            - name: POSTGRES_DB
+              value: "chatdb"
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-storage
+              subPath: postgres-data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: chat-pvc # Wahi purana PVC use kar sakte hain
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: chat-app
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
